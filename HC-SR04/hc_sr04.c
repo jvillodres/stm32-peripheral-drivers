@@ -1,5 +1,22 @@
+/**
+  ******************************************************************************
+  * @file           : hc_sr04.c
+  * @brief          : This file contains the HC-SR04 driver.
+  ******************************************************************************
+*/
+
+/* Includes ------------------------------------------------------------------*/
 #include "hc_sr04.h"
 
+/* Exported functions ------------------------------------------------------------------*/
+
+/**
+ * @brief	Initialize an instance of the HC-SR04 driver
+ * @note	By default the GPIO's used by the sensor will be modified, so in order to prevent errors when compiling, keep the
+ * 			desired GPIO's set as simple as possible when using STM32CubeMX initialization
+ * @param	hsensor		Handle of the sensor instance
+ * @retval	None
+ */
 void HCSR04_Init(HCSR04_HandleTypeDef* hsensor) {
 	// GPIO Timers
 	if (hsensor->Echo_Port == GPIOA || hsensor->Trigger_Port == GPIOA) __HAL_RCC_GPIOA_CLK_ENABLE();
@@ -26,6 +43,11 @@ void HCSR04_Init(HCSR04_HandleTypeDef* hsensor) {
 	hsensor->Distance = 0.0f;
 }
 
+/**
+ * @brief	Sends a 10us pulse on the trigger GPIO
+ * @param	hsensor		Handle of the sensor instance
+ * @retval	None
+ */
 void HCSR04_Trigger(HCSR04_HandleTypeDef* hsensor) {
 	HAL_GPIO_WritePin(hsensor->Trigger_Port, hsensor->Trigger_Pin, GPIO_PIN_SET);
 
@@ -36,6 +58,13 @@ void HCSR04_Trigger(HCSR04_HandleTypeDef* hsensor) {
 	HAL_GPIO_WritePin(hsensor->Trigger_Port, hsensor->Trigger_Pin, GPIO_PIN_RESET);
 }
 
+/**
+ * @brief	An EXTI Callback Function for the distance estimation when the echo GPIO is triggered
+ * @note	Use it inside the global GPIO EXTI Callback
+ * @param	hsensor		Handle of the sensor instance
+ * @param	GPIO_Pin	The GPIO where the external interruption was detected
+ * @retval	None
+ */
 void HCSR04_EXTI_Callback(HCSR04_HandleTypeDef* hsensor, uint16_t GPIO_Pin) {
 	if (GPIO_Pin == hsensor->Echo_Pin) {
 		if (HAL_GPIO_ReadPin(hsensor->Echo_Port, hsensor->Echo_Pin) == GPIO_PIN_SET) {
@@ -58,6 +87,11 @@ void HCSR04_EXTI_Callback(HCSR04_HandleTypeDef* hsensor, uint16_t GPIO_Pin) {
 	}
 }
 
+/**
+ * @brief	A modifiable function for getting the current count value in a timer in a resolution of 1us per increment
+ * @note	When modifying this function be sure to make it count in a period of 1us
+ * @retval	uint32_t Current timer counter value
+ */
 __weak uint32_t HCSR04_Get_Us_Timestamp(void) {
 	return 0;
 }
